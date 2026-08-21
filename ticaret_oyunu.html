@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticaret İmparatorluğu - Gelişmiş Ticaret Modu</title>
+    <!-- Chart.js Grafik Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #181825; color: #cdd6f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: #1e1e2e; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); width: 620px; border: 1px solid #313244; }
+        h1 { text-align: center; color: #f9e2af; margin: 0 0 5px 0; font-size: 1.8em; }
+        .subtitle { text-align: center; color: #a6adc8; font-size: 0.9em; margin-bottom: 15px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #313244; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 0.9em; }
+        .section-title { font-size: 0.95em; color: #89b4fa; border-bottom: 2px solid #45475a; padding-bottom: 4px; margin-top: 15px; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+        .item { background: #11111b; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #313244; }
+        .btn { background: #a6e3a1; color: #11111b; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; width: 48%; }
+        .btn:hover { opacity: 0.9; }
+        .btn-sell { background: #f38ba8; }
+        .btn-action { background: #89b4fa; width: 100%; margin-top: 5px; }
+        .btn-travel { background: #fab387; margin-top: 8px; width: 100%; }
+        .btn-save { background: #cba6f7; color: #11111b; width: 32%; margin-top: 5px; }
+        .btn-load { background: #89dceb; color: #11111b; width: 32%; margin-top: 5px; }
+        .btn-reset { background: #f38ba8; color: #11111b; width: 32%; margin-top: 5px; }
+        
+        .difficulty-container { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+        .btn-diff { width: 32%; padding: 8px; border: 1px solid #45475a; background: #11111b; color: #cdd6f4; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-diff.active { border-color: #f9e2af; background: #313244; color: #f9e2af; }
+
+        #log { background: #11111b; border: 1px solid #45475a; padding: 10px; height: 80px; overflow-y: auto; border-radius: 6px; margin-top: 15px; font-size: 0.85em; color: #a6e3a1; font-family: monospace; }
+        .chart-container { background: #11111b; padding: 10px; border-radius: 6px; border: 1px solid #313244; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Ticaret İmparatorluğu</h1>
+    <div class="subtitle">Unvan: <span id="unvan" style="color:#f9e2af;">Acemi Çırak</span></div>
+    
+    <!-- ZORLUK DERECE SEÇİMİ -->
+    <div class="difficulty-container">
+        <button class="btn-diff" id="diff-kolay" onclick="zorlukDegistir('kolay')">Kolay</button>
+        <button class="btn-diff active" id="diff-normal" onclick="zorlukDegistir('normal')">Normal</button>
+        <button class="btn-diff" id="diff-zor" onclick="zorlukDegistir('zor')">Zor</button>
+    </div>
+
+    <!-- KAYIT YÖNETİMİ BUTONLARI -->
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <button class="btn btn-save" onclick="oyunuKaydet()">Kaydet</button>
+        <button class="btn btn-load" onclick="oyunuYukle()">Yükle</button>
+        <button class="btn btn-reset" onclick="oyunuSifirla()">Sıfırla</button>
+    </div>
+
+    <div class="stats">
+        <span>Gün: <span id="gun">1</span>/20</span>
+        <span>Konum: <span id="sehir">İstanbul</span></span>
+        <span>Nakit: <span id="para">1000</span> TL</span>
+        <span>Banka Borcu: <span id="borc" style="color:#f38ba8;">0</span> TL</span>
+        <span>Mülk Geliri: <span id="pasif-gelir" style="color:#a6e3a1;">0</span> TL/gün</span>
+        <span>Maaş Gideri: <span id="toplam-maas" style="color:#f38ba8;">0</span> TL/gün</span>
+        <span>Depo: <span id="depo-kullanilan">0</span>/<span id="depo-limit">10</span></span>
+        <span>Koruma: <span id="koruma-durum">Yok</span></span>
+    </div>
+
+    <!-- MÜLK YATIRIMI SEKTÖRÜ -->
+    <div class="section-title">Gayrimenkul Yatırımı (Pasif Gelir)</div>
+    <div class="grid">
+        <div class="item">
+            <b>Küçük Dükkan</b> (+50 TL/gün)<br>
+            Fiyat: 800 TL | Adet: <span id="dukkan-sayi">0</span>
+            <button class="btn btn-action" onclick="mulkSatinal('dukkan')">Satın Al</button>
+        </div>
+        <div class="item">
+            <b>Büyük Han</b> (+200 TL/gün)<br>
+            Fiyat: 2500 TL | Adet: <span id="han-sayi">0</span>
+            <button class="btn btn-action" onclick="mulkSatinal('han')">Satın Al</button>
+        </div>
+    </div>
+
+    <!-- BANKA VE KREDİ SEKTÖRÜ -->
+    <div class="section-title">Tüccar Bankası</div>
+    <div class="grid">
+        <div class="item">
+            <b>500 TL Kredi Çek</b><br>(%20 Günlük Faiz)
+            <button class="btn btn-action" onclick="krediCek(500)">500 TL Çek</button>
+        </div>
+        <div class="item">
+            <b>Borç Öde</b><br>Mevcut Borç Tutarı Kadar
+            <button class="btn btn-action" style="background:#f9e2af;" onclick="borcOde()">Borcu Kapat</button>
+        </div>
+    </div>
+
+    <!-- KARABORSA / YÜKSEK RİSK SEKTÖRÜ -->
+    <div class="section-title">Karaborsa Spekülasyonu (Yüksek Risk)</div>
+    <div class="grid">
+        <div class="item" style="grid-column: span 2;">
+            <b>Kaçak Yük Yatırımı (Giriş: 300 TL)</b><br>
+            <small>%50 şansla yatırımı 3'e katlar, %50 şansla paranız elinizde patlar!</small><br>
+            <button class="btn btn-action" style="background:#f38ba8; color:#fff;" onclick="karaborsaYatirim()">Riske Gir (300 TL)</button>
+        </div>
+    </div>
+
+    <div class="section-title">Kervan & Çalışan Yönetimi</div>
+    <div class="grid">
+        <div class="item">
+            <b>Kervancı</b> (+10 Depo)<br>
+            Maaş: 30 TL/gün | Adet: <span id="kervanci-sayi">0</span>
+            <button class="btn btn-action" onclick="isciKirala('kervanci')">Kirala</button>
+        </div>
+        <div class="item">
+            <b>Muhafız</b> (Saldırı Engeller)<br>
+            Maaş: 50 TL/gün | Adet: <span id="muhafiz-sayi">0</span>
+            <button class="btn btn-action" onclick="isciKirala('muhafiz')">Kirala</button>
+        </div>
+    </div>
+
+    <div class="section-title">Envanter</div>
+    <div class="grid" id="envanter-list"></div>
+
+    <div class="section-title">Piyasa Fiyatları</div>
+    <div class="grid" id="piyasa-list"></div>
+
+    <div class="section-title">Piyasa Borsa Geçmişi (Son Günler)</div>
+    <div class="chart-container">
+        <canvas id="borsaChart" height="150"></canvas>
+    </div>
+
+    <div class="section-title">Seyahat Et (Maliyet: <span id="seyahat-ucreti">50</span> TL)</div>
+    <div id="seyahat-list" style="display: flex; gap: 8px;"></div>
+
+    <div id="log">> Farklı ticaret kanallarını kullanarak sermayenizi katlayın!</div>
+</div>
+
+<script>
+    // SES EFEKTLERİ MOTORU
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'buy') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'sell') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(900, now);
+            osc.frequency.setValueAtTime(1200, now + 0.08);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        } else if (type === 'travel') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.exponentialRampToValueAtTime(90, now + 0.3);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else if (type === 'click') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600, now);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        } else if (type === 'error') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+    }
+
+    // ZORLUK SEVİYESİ PARAMETRELERİ
+    const zorlukAyarlari = {
+        kolay: { baslangicPara: 2500, seyahatUcreti: 20, minCarpan: 0.8, maxCarpan: 1.2, haydutSansi: 0.05 },
+        normal: { baslangicPara: 1000, seyahatUcreti: 50, minCarpan: 0.6, maxCarpan: 1.5, haydutSansi: 0.15 },
+        zor: { baslangicPara: 400, seyahatUcreti: 100, minCarpan: 0.4, maxCarpan: 2.2, haydutSansi: 0.35 }
+    };
+
+    let mevcutZorluk = 'normal';
+
+    // OYUN VERİLERİ
+    let para = zorlukAyarlari[mevcutZorluk].baslangicPara;
+    let borc = 0;
+    let gun = 1;
+    const maxGun = 20;
+    let mevcutSehir = "İstanbul";
+    
+    let mulkler = {
+        dukkan: { adet: 0, fiyat: 800, gelir: 50 },
+        han: { adet: 0, fiyat: 2500, gelir: 200 }
+    };
+
+    let isciler = {
+        kervanci: { adet: 0, maas: 30 },
+        muhafiz: { adet: 0, maas: 50 }
+    };
+
+    const sehirler = ["İstanbul", "İzmir", "Bursa", "Antalya"];
+    let envanter = { Kumaş: 0, Baharat: 0, Demir: 0, İpek: 0 };
+    let fiyatlar = {};
+    
+    let fiyatGecmisi = { "Kumaş": [], "Baharat": [], "Demir": [], "İpek": [] };
+    let gunEtiketleri = [];
+
+    let borsaChart;
+
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function zorlukDegistir(yeniZorluk) {
+        if (gun > 1) {
+            if (!confirm("Zorluk derecesini değiştirmek oyunu sıfırlayacaktır. Onaylıyor musunuz?")) return;
+        }
+        mevcutZorluk = yeniZorluk;
+        document.querySelectorAll('.btn-diff').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`diff-${yeniZorluk}`).classList.add('active');
+        
+        para = zorlukAyarlari[mevcutZorluk].baslangicPara;
+        borc = 0;
+        gun = 1;
+        mevcutSehir = "İstanbul";
+        mulkler.dukkan.adet = 0;
+        mulkler.han.adet = 0;
+        isciler.kervanci.adet = 0;
+        isciler.muhafiz.adet = 0;
+        for (let key in envanter) envanter[key] = 0;
+        for (let key in fiyatGecmisi) fiyatGecmisi[key] = [];
+        gunEtiketleri.length = 0;
+
+        fiyatlariGuncelle();
+        guncelle();
+        playSound('click');
+        logYaz(`Zorluk seviyesi ${yeniZorluk.toUpperCase()} olarak ayarlandı. Yeni oyun başladı!`);
+    }
+
+    // YENİ TİCARET SİSTEMLERİ MANTIKLARI
+    function mulkSatinal(tip) {
+        let m = mulkler[tip];
+        if (para >= m.fiyat) {
+            para -= m.fiyat;
+            m.adet++;
+            playSound('buy');
+            logYaz(`Yeni bir ${tip.toUpperCase()} satın alındı! (+${m.gelir} TL/gün pasif gelir)`);
+            guncelle();
+        } else {
+            playSound('error');
+            logYaz("HATA: Mülk satın almak için paranız yetersiz!");
+        }
+    }
+
+    function krediCek(miktar) {
+        borc += Math.round(miktar * 1.2); // %20 Faiz
+        para += miktar;
+        playSound('sell');
+        logYaz(`Bankadan ${miktar} TL kredi çekildi. Borç hanenize ${Math.round(miktar * 1.2)} TL eklendi.`);
+        guncelle();
+    }
+
+    function borcOde() {
+        if (borc === 0) {
+            playSound('error');
+            logYaz("HATA: Ödenecek hiç borcunuz yok!");
+            return;
+        }
+        if (para >= borc) {
+            para -= borc;
+            logYaz(`Tüm banka borcunuz olan ${borc} TL kapatıldı!`);
+            borc = 0;
+            playSound('buy');
+            guncelle();
+        } else {
+            borc -= para;
+            logYaz(`Borcun ${para} TL'lik kısmı ödendi. Kalan borç: ${borc} TL`);
+            para = 0;
+            playSound('buy');
+            guncelle();
+        }
+    }
+
+    function karaborsaYatirim() {
+        if (para < 300) {
+            playSound('error');
+            logYaz("HATA: Karaborsa yatırımı için en az 300 TL gerekli!");
+            return;
+        }
+
+        para -= 300;
+        if (Math.random() < 0.5) {
+            let kazanilan = 900;
+            para += kazanilan;
+            playSound('sell');
+            logYaz(`BÜYÜK BAŞARI! Karaborsa yatırımı tuttu! 900 TL kazandınız!`);
+        } else {
+            playSound('error');
+            logYaz(`KÖTÜ ŞANS! Kaçak yüke el konuldu, 300 TL kaybettiniz!`);
+        }
+        guncelle();
+    }
+
+    function toplamPasifGelir() {
+        return (mulkler.dukkan.adet * mulkler.dukkan.gelir) + (mulkler.han.adet * mulkler.han.gelir);
+    }
+
+    function mevcutDepoMiktari() {
+        return Object.values(envanter).reduce((a, b) => a + b, 0);
+    }
+
+    function maxDepoKapasitesi() {
+        return 10 + (isciler.kervanci.adet * 10);
+    }
+
+    function toplamGunlukMaas() {
+        return (isciler.kervanci.adet * isciler.kervanci.maas) + (isciler.muhafiz.adet * isciler.muhafiz.maas);
+    }
+
+    function unvanGuncelle() {
+        let netServet = para + toplamPasifGelir() - borc;
+        let unvan = "Acemi Çırak";
+        if (netServet > 15000) unvan = "Ticaret Baronu";
+        else if (netServet > 7500) unvan = "Zengin Tüccar";
+        else if (netServet > 3000) unvan = "Usta Esnaf";
+        else if (netServet > 1500) unvan = "Kalfa";
+        document.getElementById("unvan").innerText = unvan;
+    }
+
+    function fiyatlariGuncelle() {
+        const ayar = zorlukAyarlari[mevcutZorluk];
+        
+        sehirler.forEach(sehir => {
+            fiyatlar[sehir] = {
+                Kumaş: Math.round(randomInt(10, 35) * (ayar.minCarpan + Math.random() * (ayar.maxCarpan - ayar.minCarpan))),
+                Baharat: Math.round(randomInt(40, 100) * (ayar.minCarpan + Math.random() * (ayar.maxCarpan - ayar.minCarpan))),
+                Demir: Math.round(randomInt(120, 250) * (ayar.minCarpan + Math.random() * (ayar.maxCarpan - ayar.minCarpan))),
+                İpek: Math.round(randomInt(200, 450) * (ayar.minCarpan + Math.random() * (ayar.maxCarpan - ayar.minCarpan)))
+            };
+        });
+
+        gunEtiketleri.push(`Gün ${gun}`);
+        for (let urun in envanter) {
+            fiyatGecmisi[urun].push(fiyatlar[mevcutSehir][urun]);
+        }
+    }
+
+    // LOCALSTORAGE KAYIT VE YÜKLEME
+    function oyunuKaydet() {
+        const oyunVerisi = {
+            mevcutZorluk,
+            para,
+            borc,
+            gun,
+            mevcutSehir,
+            mulkler,
+            isciler,
+            envanter,
+            fiyatlar,
+            fiyatGecmisi,
+            gunEtiketleri
+        };
+        localStorage.setItem("ticaretOyunKaydi", JSON.stringify(oyunVerisi));
+        playSound('click');
+        logYaz("BAŞARILI: Oyun yerel hafızaya kaydedildi!");
+    }
+
+    function oyunuYukle() {
+        const kayit = localStorage.getItem("ticaretOyunKaydi");
+        if (kayit) {
+            const veriler = JSON.parse(kayit);
+            mevcutZorluk = veriler.mevcutZorluk || 'normal';
+            para = veriler.para;
+            borc = veriler.borc || 0;
+            gun = veriler.gun;
+            mevcutSehir = veriler.mevcutSehir;
+            mulkler = veriler.mulkler || mulkler;
+            isciler = veriler.isciler;
+            envanter = veriler.envanter;
+            fiyatlar = veriler.fiyatlar;
+            fiyatGecmisi = veriler.fiyatGecmisi;
+            gunEtiketleri = veriler.gunEtiketleri;
+
+            document.querySelectorAll('.btn-diff').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`diff-${mevcutZorluk}`).classList.add('active');
+
+            playSound('click');
+            guncelle();
+            logYaz("BAŞARILI: Kayıtlı oyun yüklendi!");
+        } else {
+            playSound('error');
+            logYaz("HATA: Henüz kaydedilmiş bir oyun bulunamadı!");
+        }
+    }
+
+    function oyunuSifirla() {
+        if (confirm("Mevcut oyun sıfırlanacak. Emin misiniz?")) {
+            localStorage.removeItem("ticaretOyunKaydi");
+            location.reload();
+        }
+    }
+
+    function grafikBaslat() {
+        const ctx = document.getElementById('borsaChart').getContext('2d');
+        borsaChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: gunEtiketleri,
+                datasets: [
+                    { label: 'Kumaş', data: fiyatGecmisi['Kumaş'], borderColor: '#a6e3a1', tension: 0.3 },
+                    { label: 'Baharat', data: fiyatGecmisi['Baharat'], borderColor: '#f9e2af', tension: 0.3 },
+                    { label: 'Demir', data: fiyatGecmisi['Demir'], borderColor: '#89b4fa', tension: 0.3 },
+                    { label: 'İpek', data: fiyatGecmisi['İpek'], borderColor: '#f38ba8', tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#cdd6f4' } } },
+                scales: {
+                    x: { ticks: { color: '#a6adc8' }, grid: { color: '#313244' } },
+                    y: { ticks: { color: '#a6adc8' }, grid: { color: '#313244' } }
+                }
+            }
+        });
+    }
+
+    function grafikGuncelle() {
+        if (borsaChart) {
+            borsaChart.data.labels = gunEtiketleri;
+            borsaChart.data.datasets[0].data = fiyatGecmisi['Kumaş'];
+            borsaChart.data.datasets[1].data = fiyatGecmisi['Baharat'];
+            borsaChart.data.datasets[2].data = fiyatGecmisi['Demir'];
+            borsaChart.data.datasets[3].data = fiyatGecmisi['İpek'];
+            borsaChart.update();
+        }
+    }
+
+    function logYaz(mesaj) {
+        const logBox = document.getElementById("log");
+        logBox.innerHTML = `> ${mesaj}<br>` + logBox.innerHTML;
+    }
+
+    function guncelle() {
+        document.getElementById("gun").innerText = gun;
+        document.getElementById("sehir").innerText = mevcutSehir;
+        document.getElementById("para").innerText = para;
+        document.getElementById("borc").innerText = borc;
+        document.getElementById("pasif-gelir").innerText = toplamPasifGelir();
+        document.getElementById("toplam-maas").innerText = toplamGunlukMaas();
+        document.getElementById("depo-kullanilan").innerText = mevcutDepoMiktari();
+        document.getElementById("depo-limit").innerText = maxDepoKapasitesi();
+        document.getElementById("koruma-durum").innerText = isciler.muhafiz.adet > 0 ? "Aktif" : "Yok";
+        document.getElementById("seyahat-ucreti").innerText = zorlukAyarlari[mevcutZorluk].seyahatUcreti;
+
+        document.getElementById("dukkan-sayi").innerText = mulkler.dukkan.adet;
+        document.getElementById("han-sayi").innerText = mulkler.han.adet;
+        document.getElementById("kervanci-sayi").innerText = isciler.kervanci.adet;
+        document.getElementById("muhafiz-sayi").innerText = isciler.muhafiz.adet;
+
+        unvanGuncelle();
+
+        const envDiv = document.getElementById("envanter-list");
+        envDiv.innerHTML = "";
+        for (let urun in envanter) {
+            envDiv.innerHTML += `<div class="item"><b>${urun}</b><br>${envanter[urun]} adet</div>`;
+        }
+
+        const piyasaDiv = document.getElementById("piyasa-list");
+        piyasaDiv.innerHTML = "";
+        for (let urun in fiyatlar[mevcutSehir]) {
+            let f = fiyatlar[mevcutSehir][urun];
+            piyasaDiv.innerHTML += `
+                <div class="item">
+                    <b>${urun}</b>: ${f} TL<br>
+                    <button class="btn" onclick="al('${urun}')">Al</button>
+                    <button class="btn btn-sell" onclick="sat('${urun}')">Sat</button>
+                </div>`;
+        }
+
+        const seyDiv = document.getElementById("seyahat-list");
+        seyDiv.innerHTML = "";
+        sehirler.forEach(s => {
+            if (s !== mevcutSehir) {
+                seyDiv.innerHTML += `<button class="btn btn-travel" onclick="seyahat('${s}')">${s}</button>`;
+            }
+        });
+
+        grafikGuncelle();
+    }
+
+    function isciKirala(tip) {
+        let maas = isciler[tip].maas;
+        if (para >= maas) {
+            isciler[tip].adet++;
+            playSound('click');
+            logYaz(`Yeni ${tip} kiralandı.`);
+            guncelle();
+        } else {
+            playSound('error');
+            logYaz("HATA: Yetersiz bakiye!");
+        }
+    }
+
+    function al(urun) {
+        let f = fiyatlar[mevcutSehir][urun];
+        if (mevcutDepoMiktari() >= maxDepoKapasitesi()) {
+            playSound('error');
+            logYaz("HATA: Depo dolu!");
+            return;
+        }
+        if (para >= f) {
+            para -= f;
+            envanter[urun]++;
+            playSound('buy');
+            logYaz(`1 adet ${urun} alındı (-${f} TL)`);
+            guncelle();
+        } else {
+            playSound('error');
+            logYaz("HATA: Yetersiz nakit!");
+        }
+    }
+
+    function sat(urun) {
+        if (envanter[urun] > 0) {
+            let f = fiyatlar[mevcutSehir][urun];
+            para += f;
+            envanter[urun]--;
+            playSound('sell');
+            logYaz(`1 adet ${urun} satıldı (+${f} TL)`);
+            guncelle();
+        } else {
+            playSound('error');
+            logYaz("HATA: Ürün stokta yok!");
+        }
+    }
+
+    function seyahat(hedef) {
+        if (gun >= maxGun) {
+            alert(`Oyun Bitti! Bitiş Bakiyeniz: ${para} TL | Borcunuz: ${borc} TL`);
+            return;
+        }
+
+        const yolUcreti = zorlukAyarlari[mevcutZorluk].seyahatUcreti;
+        const maasToplam = toplamGunlukMaas();
+        const toplamGider = yolUcreti + maasToplam;
+
+        if (para + toplamPasifGelir() < toplamGider) {
+            playSound('error');
+            logYaz("HATA: Seyahat masrafları ve çalışan maaşları için yeterli paranız yok!");
+            return;
+        }
+
+        // Günlük Gelir ve Gider Dengesi
+        let gunlukGelir = toplamPasifGelir();
+        para += gunlukGelir;
+        para -= toplamGider;
+        
+        mevcutSehir = hedef;
+        gun++;
+
+        // Haydut Saldırısı Olayı
+        const haydutSansi = zorlukAyarlari[mevcutZorluk].haydutSansi;
+        if (Math.random() < haydutSansi) {
+            if (isciler.muhafiz.adet > 0) {
+                logYaz("UYARI: Yolda haydutlar saldırdı, fakat Muhafızlarınız onları püskürttü!");
+            } else {
+                let kayip = Math.round(para * 0.2);
+                para -= kayip;
+                logYaz(`TEHLİKE: Haydut saldırısı! Paranızın %20'sini (${kayip} TL) çaldırdınız!`);
+            }
+        }
+
+        playSound('travel');
+        fiyatlariGuncelle();
+        logYaz(`${hedef} şehrine geçildi. (Gider: ${toplamGider} TL | Mülk Geliri: +${gunlukGelir} TL)`);
+        guncelle();
+    }
+
+    fiyatlariGuncelle();
+    window.onload = function() {
+        grafikBaslat();
+        guncelle();
+    };
+</script>
+</body>
+</html>
