@@ -2,10 +2,10 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Ticaret İmparatorluğu - 2D Harita Eklentisi</title>
+    <title>Ticaret İmparatorluğu - Pixel Sprite Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #181825; color: #cdd6f4; display: flex; justify-content: center; align-align: center; min-height: 100vh; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #181825; color: #cdd6f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .card { background: #1e1e2e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); width: 680px; border: 1px solid #313244; }
         h1 { text-align: center; color: #f9e2af; margin: 0 0 5px 0; font-size: 1.8em; }
         .subtitle { text-align: center; color: #a6adc8; font-size: 0.9em; margin-bottom: 15px; }
@@ -14,39 +14,34 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
         .item { background: #11111b; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #313244; }
         .btn { background: #a6e3a1; color: #11111b; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; width: 48%; }
-        .btn:hover { opacity: 0.9; }
         .btn-sell { background: #f38ba8; }
         .btn-action { background: #89b4fa; width: 100%; margin-top: 5px; }
 
-        /* CANVASHARITA BÖLÜMÜ */
+        /* CANVAS VE HARİTA */
         #map-container { text-align: center; position: relative; margin-bottom: 15px; }
-        canvas { background: #11111b; border: 2px solid #45475a; border-radius: 8px; }
-        .controls-hint { font-size: 0.8em; color: #fab387; margin-top: 4px; }
+        canvas { background: #18230f; border: 2px solid #45475a; border-radius: 8px; image-rendering: pixelated; }
+        .controls-hint { font-size: 0.85em; color: #fab387; margin-top: 6px; font-weight: bold; }
 
         #log { background: #11111b; border: 1px solid #45475a; padding: 10px; height: 70px; overflow-y: auto; border-radius: 6px; margin-top: 15px; font-size: 0.85em; color: #a6e3a1; font-family: monospace; }
-        .chart-container { background: #11111b; padding: 10px; border-radius: 6px; border: 1px solid #313244; margin-top: 8px; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>Ticaret İmparatorluğu</h1>
-    <div class="subtitle">Unvan: <span id="unvan" style="color:#f9e2af;">Acemi Çırak</span></div>
+    <div class="subtitle">Unvan: <span id="unvan" style="color:#f9e2af;">Gezgin Tüccar</span></div>
 
-    <!-- HARİTA VE KARAKTER -->
-    <div class="section-title">2D Dünya Haritası</div>
+    <div class="section-title">2D Piksel Harita</div>
     <div id="map-container">
-        <canvas id="gameMap" width="640" height="240"></canvas>
-        <div class="controls-hint">🎮 Karakteri Hareket Ettir: <b>W, A, S, D</b> veya <b>Yön Tuşları</b> (Şehre yaklaşınca pazara girersin)</div>
+        <canvas id="gameMap" width="640" height="260"></canvas>
+        <div class="controls-hint">🎮 <b>W, A, S, D</b> veya <b>Yön Tuşları</b> ile Karakteri Yürüt (Şehre yaklaşınca pazar değişir)</div>
     </div>
 
     <div class="stats">
         <span>Gün: <span id="gun">1</span>/20</span>
-        <span>Mevcut Şehir: <span id="sehir">İstanbul</span></span>
+        <span>Mevcut Konum: <span id="sehir">İstanbul</span></span>
         <span>Nakit: <span id="para">1000</span> TL</span>
         <span>Banka Borcu: <span id="borc" style="color:#f38ba8;">0</span> TL</span>
-        <span>Pasif Gelir: <span id="pasif-gelir" style="color:#a6e3a1;">0</span> TL/gün</span>
-        <span>Maaş Gideri: <span id="toplam-maas" style="color:#f38ba8;">0</span> TL/gün</span>
         <span>Depo: <span id="depo-kullanilan">0</span>/<span id="depo-limit">10</span></span>
         <span>Koruma: <span id="koruma-durum">Yok</span></span>
     </div>
@@ -57,164 +52,190 @@
     <div class="section-title">Envanter</div>
     <div class="grid" id="envanter-list"></div>
 
-    <div class="section-title">Tüccar Bankası & Finans</div>
-    <div class="grid">
-        <div class="item">
-            <b>500 TL Kredi Çek</b> (%20 Faiz)
-            <button class="btn btn-action" onclick="krediCek(500)">Kredi Al</button>
-        </div>
-        <div class="item">
-            <b>Borç Öde</b>
-            <button class="btn btn-action" style="background:#f9e2af;" onclick="borcOde()">Borcu Kapat</button>
-        </div>
-    </div>
-
-    <div class="section-title">Kervan & Çalışan Yönetimi</div>
-    <div class="grid">
-        <div class="item">
-            <b>Kervancı</b> (+10 Depo)<br>Maaş: 30 TL/gün
-            <button class="btn btn-action" onclick="isciKirala('kervanci')">Kirala</button>
-        </div>
-        <div class="item">
-            <b>Muhafız</b> (Saldırı Engeller)<br>Maaş: 50 TL/gün
-            <button class="btn btn-action" onclick="isciKirala('muhafiz')">Kirala</button>
-        </div>
-    </div>
-
-    <div class="section-title">Piyasa Borsa Geçmişi</div>
-    <div class="chart-container">
-        <canvas id="borsaChart" height="120"></canvas>
-    </div>
-
-    <div id="log">> Karakterinizi şehirler arasında yürütmek için W-A-S-D tuşlarını kullanın!</div>
+    <div id="log">> Karakterinizi yürütmek için tuşları kullanın!</div>
 </div>
 
 <script>
-    // OYUN VERİLERİ
+    // OYUN DURUMU
     let para = 1000;
     let borc = 0;
     let gun = 1;
-    const maxGun = 20;
     let mevcutSehir = "İstanbul";
-
-    let isciler = { kervanci: { adet: 0, maas: 30 }, muhafiz: { adet: 0, maas: 50 } };
-    let mulkler = { dukkan: { adet: 0, gelir: 50 }, han: { adet: 0, gelir: 200 } };
     let envanter = { Kumaş: 0, Baharat: 0, Demir: 0, İpek: 0 };
     let fiyatlar = {};
-    let fiyatGecmisi = { "Kumaş": [], "Baharat": [], "Demir": [], "İpek": [] };
-    let gunEtiketleri = [];
 
-    // HARİTA VE KARAKTER SİSTEMİ
+    // CANVAS & KARAKTER ANIMASYON VERILERI
     const canvas = document.getElementById("gameMap");
     const ctx = canvas.getContext("2d");
 
     const player = {
         x: 100,
-        y: 120,
-        size: 12,
-        speed: 4,
-        color: '#f9e2af'
+        y: 130,
+        speed: 2.5,
+        direction: 'down', // down, up, left, right
+        isMoving: false,
+        animFrame: 0,
+        animTimer: 0
     };
 
-    const sehirKonumlari = [
-        { name: "İstanbul", x: 100, y: 120, color: "#89b4fa" },
-        { name: "İzmir", x: 240, y: 180, color: "#a6e3a1" },
-        { name: "Bursa", x: 380, y: 80, color: "#fab387" },
-        { name: "Antalya", x: 520, y: 160, color: "#f38ba8" }
+    const sehirler = [
+        { name: "İstanbul", x: 90, y: 130, color: "#89b4fa" },
+        { name: "İzmir", x: 250, y: 190, color: "#a6e3a1" },
+        { name: "Bursa", x: 400, y: 80, color: "#fab387" },
+        { name: "Antalya", x: 540, y: 170, color: "#f38ba8" }
     ];
 
     let keys = {};
-
     window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
     window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-    function gameLoop() {
-        updatePlayer();
-        drawMap();
-        requestAnimationFrame(gameLoop);
+    // KODLA PIXEL SPRITE CIZIMI (BACAK VE YÜRÜME ANIMASYONLU)
+    function drawPixelMerchant(x, y, dir, frame, moving) {
+        ctx.save();
+        ctx.translate(x, y);
+
+        // Yürüme Salınımı (Bobbing)
+        let bob = (moving && (frame === 1 || frame === 3)) ? -2 : 0;
+        let legOffset = (moving && frame === 1) ? 3 : ((moving && frame === 3) ? -3 : 0);
+
+        // 1. Gölge
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 10, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Bacaklar (Yürüme Animasyonu)
+        ctx.fillStyle = "#313244";
+        // Sol Bacak
+        ctx.fillRect(-5, 6 + (dir === 'left' || dir === 'right' ? legOffset : legOffset), 4, 8);
+        // Sağ Bacak
+        ctx.fillRect(1, 6 + (dir === 'left' || dir === 'right' ? -legOffset : -legOffset), 4, 8);
+
+        // 3. Gövde & Kıyafet
+        ctx.fillStyle = "#e7826e"; // Tüccar Cübbesi
+        ctx.fillRect(-7, -4 + bob, 14, 11);
+
+        // 4. Sırt Çantası (Tüccar Heybesi)
+        ctx.fillStyle = "#a67c52";
+        if (dir === 'down') ctx.fillRect(-9, -2 + bob, 3, 7);
+        if (dir === 'up') ctx.fillRect(-6, -3 + bob, 12, 6);
+        if (dir === 'right') ctx.fillRect(-10, -3 + bob, 4, 8);
+
+        // 5. Kafası
+        ctx.fillStyle = "#f5e0dc"; // Ten rengi
+        ctx.fillRect(-5, -13 + bob, 10, 9);
+
+        // 6. Şapka / Sarık
+        ctx.fillStyle = "#f9e2af";
+        ctx.fillRect(-6, -16 + bob, 12, 4);
+
+        // 7. Yüz / Gözler
+        ctx.fillStyle = "#11111b";
+        if (dir === 'down') {
+            ctx.fillRect(-3, -10 + bob, 2, 2);
+            ctx.fillRect(1, -10 + bob, 2, 2);
+        } else if (dir === 'left') {
+            ctx.fillRect(-4, -10 + bob, 2, 2);
+        } else if (dir === 'right') {
+            ctx.fillRect(2, -10 + bob, 2, 2);
+        }
+
+        ctx.restore();
     }
 
-    function updatePlayer() {
-        let moved = false;
-        if (keys["w"] || keys["arrowup"]) { player.y -= player.speed; moved = true; }
-        if (keys["s"] || keys["arrowdown"]) { player.y += player.speed; moved = true; }
-        if (keys["a"] || keys["arrowleft"]) { player.x -= player.speed; moved = true; }
-        if (keys["d"] || keys["arrowright"]) { player.x += player.speed; moved = true; }
+    function update() {
+        player.isMoving = false;
 
-        // Ekran sınırları
-        player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
-        player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+        if (keys["w"] || keys["arrowup"]) { player.y -= player.speed; player.direction = 'up'; player.isMoving = true; }
+        if (keys["s"] || keys["arrowdown"]) { player.y += player.speed; player.direction = 'down'; player.isMoving = true; }
+        if (keys["a"] || keys["arrowleft"]) { player.x -= player.speed; player.direction = 'left'; player.isMoving = true; }
+        if (keys["d"] || keys["arrowright"]) { player.x += player.speed; player.direction = 'right'; player.isMoving = true; }
 
-        // Şehirlere Yaklaşma Kontrolü
-        sehirKonumlari.forEach(sehir => {
-            let dist = Math.hypot(player.x - sehir.x, player.y - sehir.y);
-            if (dist < 25 && mevcutSehir !== sehir.name) {
-                sehirDegistir(sehir.name);
+        // Ekran Sınırları
+        player.x = Math.max(15, Math.min(canvas.width - 15, player.x));
+        player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
+
+        // Animasyon Kare Sayacı
+        if (player.isMoving) {
+            player.animTimer++;
+            if (player.animTimer % 8 === 0) {
+                player.animFrame = (player.animFrame + 1) % 4;
+            }
+        } else {
+            player.animFrame = 0;
+        }
+
+        // Şehir Kontrolü
+        sehirler.forEach(s => {
+            let dist = Math.hypot(player.x - s.x, player.y - s.y);
+            if (dist < 22 && mevcutSehir !== s.name) {
+                sehirDegistir(s.name);
             }
         });
     }
 
-    function drawMap() {
+    function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Yolları Çiz
-        ctx.strokeStyle = "#313244";
-        ctx.lineWidth = 3;
+        // Yollar (Çim üzerindeki patika)
+        ctx.strokeStyle = "#45475a";
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
         ctx.beginPath();
-        for (let i = 0; i < sehirKonumlari.length - 1; i++) {
-            ctx.moveTo(sehirKonumlari[i].x, sehirKonumlari[i].y);
-            ctx.lineTo(sehirKonumlari[i+1].x, sehirKonumlari[i+1].y);
+        for (let i = 0; i < sehirler.length - 1; i++) {
+            ctx.moveTo(sehirler[i].x, sehirler[i].y);
+            ctx.lineTo(sehirler[i+1].x, sehirler[i+1].y);
         }
         ctx.stroke();
 
-        // Şehirleri Çiz
-        sehirKonumlari.forEach(sehir => {
-            ctx.fillStyle = sehir.color;
+        // Şehir Kaleleri / Binaları
+        sehirler.forEach(s => {
+            // Şehir Tabanı
+            ctx.fillStyle = s.color;
             ctx.beginPath();
-            ctx.arc(sehir.x, sehir.y, 18, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, 16, 0, Math.PI * 2);
             ctx.fill();
 
+            // Şehir Çatısı (Piksel Ev Görünümü)
+            ctx.fillStyle = "#1e1e2e";
+            ctx.fillRect(s.x - 8, s.y - 12, 16, 14);
+            ctx.fillStyle = "#f38ba8";
+            ctx.beginPath();
+            ctx.moveTo(s.x - 11, s.y - 12);
+            ctx.lineTo(s.x, s.y - 20);
+            ctx.lineTo(s.x + 11, s.y - 12);
+            ctx.fill();
+
+            // Etiket
             ctx.fillStyle = "#cdd6f4";
-            ctx.font = "bold 12px Segoe UI";
+            ctx.font = "bold 11px Segoe UI";
             ctx.textAlign = "center";
-            ctx.fillText(sehir.name, sehir.x, sehir.y - 25);
+            ctx.fillText(s.name, s.x, s.y + 26);
         });
 
-        // Karakteri Çiz (Tüccar)
-        ctx.fillStyle = player.color;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#11111b";
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        // Karakteri Çiz
+        drawPixelMerchant(player.x, player.y, player.direction, player.animFrame, player.isMoving);
     }
+
+    function gameLoop() {
+        update();
+        render();
+        requestAnimationFrame(gameLoop);
+    }
+
+    // TİCARET & MANTIK
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function sehirDegistir(yeniSehir) {
         mevcutSehir = yeniSehir;
         gun++;
-
-        // Haydut Şansı
-        if (Math.random() < 0.25) {
-            if (isciler.muhafiz.adet > 0) {
-                logYaz("TEHLİKE: Yolda haydutlar saldırdı, muhafızlarınız sizi korudu!");
-            } else {
-                let kayip = Math.round(para * 0.15);
-                para -= kayip;
-                logYaz(`Saldırıya uğradınız! Haydutlar ${kayip} TL paranızı çaldı!`);
-            }
-        }
-
         fiyatlariGuncelle();
-        logYaz(`Yeni şehre ulaşıldı: ${mevcutSehir} (Gün ${gun})`);
+        logYaz(`📍 ${mevcutSehir} pazarına giriş yaptınız! (Gün ${gun})`);
         guncelle();
     }
 
-    // MANTIK VE FİNANS FONKSİYONLARI
-    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
     function fiyatlariGuncelle() {
-        sehirKonumlari.forEach(s => {
+        sehirler.forEach(s => {
             fiyatlar[s.name] = {
                 Kumaş: randomInt(10, 35),
                 Baharat: randomInt(40, 100),
@@ -222,32 +243,6 @@
                 İpek: randomInt(200, 450)
             };
         });
-
-        gunEtiketleri.push(`Gün ${gun}`);
-        for (let urun in envanter) {
-            fiyatGecmisi[urun].push(fiyatlar[mevcutSehir][urun]);
-        }
-    }
-
-    function krediCek(m) {
-        borc += Math.round(m * 1.2);
-        para += m;
-        logYaz(`${m} TL kredi çekildi.`);
-        guncelle();
-    }
-
-    function borcOde() {
-        if (para >= borc) { para -= borc; borc = 0; logYaz("Borç ödendi!"); }
-        else { borc -= para; para = 0; logYaz("Kısmi borç ödendi."); }
-        guncelle();
-    }
-
-    function isciKirala(tip) {
-        if (para >= isciler[tip].maas) {
-            isciler[tip].adet++;
-            logYaz(`Yeni ${tip} kiralandı.`);
-            guncelle();
-        }
     }
 
     function al(u) {
@@ -255,16 +250,17 @@
         if (para >= f) {
             para -= f;
             envanter[u]++;
-            logYaz(`${u} satın alındı.`);
+            logYaz(`${u} alındı. (-${f} TL)`);
             guncelle();
         }
     }
 
     function sat(u) {
         if (envanter[u] > 0) {
-            para += fiyatlar[mevcutSehir][u];
+            let f = fiyatlar[mevcutSehir][u];
+            para += f;
             envanter[u]--;
-            logYaz(`${u} satıldı.`);
+            logYaz(`${u} satıldı. (+${f} TL)`);
             guncelle();
         }
     }
@@ -281,8 +277,6 @@
         document.getElementById("para").innerText = para;
         document.getElementById("borc").innerText = borc;
         document.getElementById("depo-kullanilan").innerText = Object.values(envanter).reduce((a, b) => a + b, 0);
-        document.getElementById("depo-limit").innerText = 10 + (isciler.kervanci.adet * 10);
-        document.getElementById("koruma-durum").innerText = isciler.muhafiz.adet > 0 ? "Aktif" : "Yok";
 
         const envDiv = document.getElementById("envanter-list");
         envDiv.innerHTML = "";
