@@ -2,10 +2,27 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticaret İmparatorluğu</title>
+
+    <!-- PWA ve PWABuilder Gereksinimleri -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker Kayıtlı:', reg.scope))
+                    .catch(err => console.log('Service Worker Hatası:', err));
+            });
+        }
+    </script>
+
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #181825; color: #cdd6f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e1e2e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); width: 650px; border: 1px solid #313244; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #181825; color: #cdd6f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .card { background: #1e1e2e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); width: 100%; max-width: 650px; border: 1px solid #313244; }
         h1 { text-align: center; color: #f9e2af; margin: 0 0 5px 0; font-size: 1.8em; }
         .subtitle { text-align: center; color: #a6adc8; font-size: 0.9em; margin-bottom: 15px; }
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #313244; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 0.9em; }
