@@ -2,8 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Ticaret İmparatorluğu - Pixel Sprite Edition</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Ticaret İmparatorluğu - Tıkla & Git Edition</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #181825; color: #cdd6f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .card { background: #1e1e2e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); width: 680px; border: 1px solid #313244; }
@@ -14,12 +13,11 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
         .item { background: #11111b; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #313244; }
         .btn { background: #a6e3a1; color: #11111b; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; width: 48%; }
+        .btn:disabled { background: #45475a; color: #7f849c; cursor: not-allowed; }
         .btn-sell { background: #f38ba8; }
-        .btn-action { background: #89b4fa; width: 100%; margin-top: 5px; }
 
-        /* CANVAS VE HARİTA */
         #map-container { text-align: center; position: relative; margin-bottom: 15px; }
-        canvas { background: #18230f; border: 2px solid #45475a; border-radius: 8px; image-rendering: pixelated; }
+        canvas { background: #18230f; border: 2px solid #45475a; border-radius: 8px; cursor: pointer; image-rendering: pixelated; }
         .controls-hint { font-size: 0.85em; color: #fab387; margin-top: 6px; font-weight: bold; }
 
         #log { background: #11111b; border: 1px solid #45475a; padding: 10px; height: 70px; overflow-y: auto; border-radius: 6px; margin-top: 15px; font-size: 0.85em; color: #a6e3a1; font-family: monospace; }
@@ -29,20 +27,20 @@
 
 <div class="card">
     <h1>Ticaret İmparatorluğu</h1>
-    <div class="subtitle">Unvan: <span id="unvan" style="color:#f9e2af;">Gezgin Tüccar</span></div>
+    <div class="subtitle">Unvan: <span id="unvan" style="color:#f9e2af;">Özgür Tüccar</span></div>
 
-    <div class="section-title">2D Piksel Harita</div>
+    <div class="section-title">Harita (Tıkla-Git)</div>
     <div id="map-container">
         <canvas id="gameMap" width="640" height="260"></canvas>
-        <div class="controls-hint">🎮 <b>W, A, S, D</b> veya <b>Yön Tuşları</b> ile Karakteri Yürüt (Şehre yaklaşınca pazar değişir)</div>
+        <div class="controls-hint">🖱️ Haritada gitmek istediğin yere veya bir şehre <b>TIKLA</b>! Karakter otomatik gitsin.</div>
     </div>
 
     <div class="stats">
-        <span>Gün: <span id="gun">1</span>/20</span>
+        <span>Geçen Gün: <span id="gun">1</span></span>
         <span>Mevcut Konum: <span id="sehir">İstanbul</span></span>
         <span>Nakit: <span id="para">1000</span> TL</span>
         <span>Banka Borcu: <span id="borc" style="color:#f38ba8;">0</span> TL</span>
-        <span>Depo: <span id="depo-kullanilan">0</span>/<span id="depo-limit">10</span></span>
+        <span>Depo Kapasitesi: <span id="depo-kullanilan">0</span>/<span id="depo-limit">10</span></span>
         <span>Koruma: <span id="koruma-durum">Yok</span></span>
     </div>
 
@@ -52,27 +50,30 @@
     <div class="section-title">Envanter</div>
     <div class="grid" id="envanter-list"></div>
 
-    <div id="log">> Karakterinizi yürütmek için tuşları kullanın!</div>
+    <div id="log">> Oyuna hoş geldiniz! Haritaya tıklayarak karakterinizi yönlendirebilirsiniz.</div>
 </div>
 
 <script>
-    // OYUN DURUMU
+    // OYUN DURUMU (GÜN SINIRI KALDIRILDI)
     let para = 1000;
     let borc = 0;
     let gun = 1;
     let mevcutSehir = "İstanbul";
     let envanter = { Kumaş: 0, Baharat: 0, Demir: 0, İpek: 0 };
     let fiyatlar = {};
+    const maxDepo = 10;
 
-    // CANVAS & KARAKTER ANIMASYON VERILERI
+    // CANVAS & TIKLA-GİT HAREKET SİSTEMİ
     const canvas = document.getElementById("gameMap");
     const ctx = canvas.getContext("2d");
 
     const player = {
-        x: 100,
+        x: 90,
         y: 130,
-        speed: 2.5,
-        direction: 'down', // down, up, left, right
+        targetX: 90,
+        targetY: 130,
+        speed: 3,
+        direction: 'down',
         isMoving: false,
         animFrame: 0,
         animTimer: 0
@@ -85,51 +86,88 @@
         { name: "Antalya", x: 540, y: 170, color: "#f38ba8" }
     ];
 
-    let keys = {};
-    window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
-    window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+    // MOUSE TIKLAMA OLAYI
+    canvas.addEventListener("click", function(e) {
+        const rect = canvas.getBoundingClientRect();
+        player.targetX = e.clientX - rect.left;
+        player.targetY = e.clientY - rect.top;
+    });
 
-    // KODLA PIXEL SPRITE CIZIMI (BACAK VE YÜRÜME ANIMASYONLU)
+    function update() {
+        let dx = player.targetX - player.x;
+        let dy = player.targetY - player.y;
+        let distance = Math.hypot(dx, dy);
+
+        if (distance > player.speed) {
+            player.isMoving = true;
+            player.x += (dx / distance) * player.speed;
+            player.y += (dy / distance) * player.speed;
+
+            // Yön Hesabı
+            if (Math.abs(dx) > Math.abs(dy)) {
+                player.direction = dx > 0 ? 'right' : 'left';
+            } else {
+                player.direction = dy > 0 ? 'down' : 'up';
+            }
+
+            // Animasyon
+            player.animTimer++;
+            if (player.animTimer % 8 === 0) {
+                player.animFrame = (player.animFrame + 1) % 4;
+            }
+        } else {
+            player.x = player.targetX;
+            player.y = player.targetY;
+            player.isMoving = false;
+            player.animFrame = 0;
+        }
+
+        // Şehir Kontrolü
+        sehirler.forEach(s => {
+            let dist = Math.hypot(player.x - s.x, player.y - s.y);
+            if (dist < 20 && mevcutSehir !== s.name) {
+                sehirDegistir(s.name);
+            }
+        });
+    }
+
     function drawPixelMerchant(x, y, dir, frame, moving) {
         ctx.save();
         ctx.translate(x, y);
 
-        // Yürüme Salınımı (Bobbing)
         let bob = (moving && (frame === 1 || frame === 3)) ? -2 : 0;
         let legOffset = (moving && frame === 1) ? 3 : ((moving && frame === 3) ? -3 : 0);
 
-        // 1. Gölge
+        // Gölge
         ctx.fillStyle = "rgba(0,0,0,0.3)";
         ctx.beginPath();
         ctx.ellipse(0, 14, 10, 5, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 2. Bacaklar (Yürüme Animasyonu)
+        // Bacaklar
         ctx.fillStyle = "#313244";
-        // Sol Bacak
-        ctx.fillRect(-5, 6 + (dir === 'left' || dir === 'right' ? legOffset : legOffset), 4, 8);
-        // Sağ Bacak
-        ctx.fillRect(1, 6 + (dir === 'left' || dir === 'right' ? -legOffset : -legOffset), 4, 8);
+        ctx.fillRect(-5, 6 + legOffset, 4, 8);
+        ctx.fillRect(1, 6 - legOffset, 4, 8);
 
-        // 3. Gövde & Kıyafet
-        ctx.fillStyle = "#e7826e"; // Tüccar Cübbesi
+        // Gövde & Kıyafet
+        ctx.fillStyle = "#e7826e";
         ctx.fillRect(-7, -4 + bob, 14, 11);
 
-        // 4. Sırt Çantası (Tüccar Heybesi)
+        // Çanta
         ctx.fillStyle = "#a67c52";
         if (dir === 'down') ctx.fillRect(-9, -2 + bob, 3, 7);
         if (dir === 'up') ctx.fillRect(-6, -3 + bob, 12, 6);
         if (dir === 'right') ctx.fillRect(-10, -3 + bob, 4, 8);
 
-        // 5. Kafası
-        ctx.fillStyle = "#f5e0dc"; // Ten rengi
+        // Kafa
+        ctx.fillStyle = "#f5e0dc";
         ctx.fillRect(-5, -13 + bob, 10, 9);
 
-        // 6. Şapka / Sarık
+        // Şapka
         ctx.fillStyle = "#f9e2af";
         ctx.fillRect(-6, -16 + bob, 12, 4);
 
-        // 7. Yüz / Gözler
+        // Gözler
         ctx.fillStyle = "#11111b";
         if (dir === 'down') {
             ctx.fillRect(-3, -10 + bob, 2, 2);
@@ -143,44 +181,12 @@
         ctx.restore();
     }
 
-    function update() {
-        player.isMoving = false;
-
-        if (keys["w"] || keys["arrowup"]) { player.y -= player.speed; player.direction = 'up'; player.isMoving = true; }
-        if (keys["s"] || keys["arrowdown"]) { player.y += player.speed; player.direction = 'down'; player.isMoving = true; }
-        if (keys["a"] || keys["arrowleft"]) { player.x -= player.speed; player.direction = 'left'; player.isMoving = true; }
-        if (keys["d"] || keys["arrowright"]) { player.x += player.speed; player.direction = 'right'; player.isMoving = true; }
-
-        // Ekran Sınırları
-        player.x = Math.max(15, Math.min(canvas.width - 15, player.x));
-        player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
-
-        // Animasyon Kare Sayacı
-        if (player.isMoving) {
-            player.animTimer++;
-            if (player.animTimer % 8 === 0) {
-                player.animFrame = (player.animFrame + 1) % 4;
-            }
-        } else {
-            player.animFrame = 0;
-        }
-
-        // Şehir Kontrolü
-        sehirler.forEach(s => {
-            let dist = Math.hypot(player.x - s.x, player.y - s.y);
-            if (dist < 22 && mevcutSehir !== s.name) {
-                sehirDegistir(s.name);
-            }
-        });
-    }
-
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Yollar (Çim üzerindeki patika)
+        // Yollar
         ctx.strokeStyle = "#45475a";
-        ctx.lineWidth = 6;
-        ctx.lineCap = "round";
+        ctx.lineWidth = 5;
         ctx.beginPath();
         for (let i = 0; i < sehirler.length - 1; i++) {
             ctx.moveTo(sehirler[i].x, sehirler[i].y);
@@ -188,15 +194,22 @@
         }
         ctx.stroke();
 
-        // Şehir Kaleleri / Binaları
+        // Hedef İşaretçisi
+        if (player.isMoving) {
+            ctx.strokeStyle = "#f9e2af";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(player.targetX, player.targetY, 6, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Şehirler
         sehirler.forEach(s => {
-            // Şehir Tabanı
             ctx.fillStyle = s.color;
             ctx.beginPath();
             ctx.arc(s.x, s.y, 16, 0, Math.PI * 2);
             ctx.fill();
 
-            // Şehir Çatısı (Piksel Ev Görünümü)
             ctx.fillStyle = "#1e1e2e";
             ctx.fillRect(s.x - 8, s.y - 12, 16, 14);
             ctx.fillStyle = "#f38ba8";
@@ -206,14 +219,12 @@
             ctx.lineTo(s.x + 11, s.y - 12);
             ctx.fill();
 
-            // Etiket
             ctx.fillStyle = "#cdd6f4";
             ctx.font = "bold 11px Segoe UI";
             ctx.textAlign = "center";
             ctx.fillText(s.name, s.x, s.y + 26);
         });
 
-        // Karakteri Çiz
         drawPixelMerchant(player.x, player.y, player.direction, player.animFrame, player.isMoving);
     }
 
@@ -223,14 +234,14 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // TİCARET & MANTIK
+    // TİCARET & DEPO MANTIKLARI
     function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function sehirDegistir(yeniSehir) {
         mevcutSehir = yeniSehir;
         gun++;
         fiyatlariGuncelle();
-        logYaz(`📍 ${mevcutSehir} pazarına giriş yaptınız! (Gün ${gun})`);
+        logYaz(`📍 ${mevcutSehir} pazarına vardınız. (Gün ${gun})`);
         guncelle();
     }
 
@@ -245,13 +256,26 @@
         });
     }
 
+    function mevcutMiktar() {
+        return Object.values(envanter).reduce((a, b) => a + b, 0);
+    }
+
     function al(u) {
         let f = fiyatlar[mevcutSehir][u];
+
+        // DEPO KONTROLÜ
+        if (mevcutMiktar() >= maxDepo) {
+            logYaz("⚠️ DEPO DOLU! Daha fazla ürün alamazsın.");
+            return;
+        }
+
         if (para >= f) {
             para -= f;
             envanter[u]++;
             logYaz(`${u} alındı. (-${f} TL)`);
             guncelle();
+        } else {
+            logYaz("⚠️ Yetersiz Bakiye!");
         }
     }
 
@@ -276,7 +300,10 @@
         document.getElementById("aktif-pazar-adi").innerText = mevcutSehir;
         document.getElementById("para").innerText = para;
         document.getElementById("borc").innerText = borc;
-        document.getElementById("depo-kullanilan").innerText = Object.values(envanter).reduce((a, b) => a + b, 0);
+
+        let toplamUrun = mevcutMiktar();
+        document.getElementById("depo-kullanilan").innerText = toplamUrun;
+        document.getElementById("depo-limit").innerText = maxDepo;
 
         const envDiv = document.getElementById("envanter-list");
         envDiv.innerHTML = "";
@@ -286,7 +313,13 @@
         piyDiv.innerHTML = "";
         for (let u in fiyatlar[mevcutSehir]) {
             let f = fiyatlar[mevcutSehir][u];
-            piyDiv.innerHTML += `<div class="item"><b>${u}</b>: ${f} TL<br><button class="btn" onclick="al('${u}')">Al</button><button class="btn btn-sell" onclick="sat('${u}')">Sat</button></div>`;
+            let depoDolu = toplamUrun >= maxDepo;
+            piyDiv.innerHTML += `
+                <div class="item">
+                    <b>${u}</b>: ${f} TL<br>
+                    <button class="btn" onclick="al('${u}')" ${depoDolu ? 'disabled' : ''}>${depoDolu ? 'Depo Dolu' : 'Al'}</button>
+                    <button class="btn btn-sell" onclick="sat('${u}')">Sat</button>
+                </div>`;
         }
     }
 
