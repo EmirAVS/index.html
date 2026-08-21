@@ -5,63 +5,66 @@
     <title>Ticaret İmparatorluğu</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #181825; color: #cdd6f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e1e2e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); width: 680px; border: 1px solid #313244; }
+        .card { background: #1e1e2e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); width: 650px; border: 1px solid #313244; }
         h1 { text-align: center; color: #f9e2af; margin: 0 0 5px 0; font-size: 1.8em; }
         .subtitle { text-align: center; color: #a6adc8; font-size: 0.9em; margin-bottom: 15px; }
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #313244; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 0.9em; }
         .section-title { font-size: 0.95em; color: #89b4fa; border-bottom: 2px solid #45475a; padding-bottom: 4px; margin-top: 15px; font-weight: bold; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
         .item { background: #11111b; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #313244; }
+        
         .btn { background: #a6e3a1; color: #11111b; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; width: 48%; }
-        .btn:disabled { background: #45475a !important; color: #7f849c !important; cursor: not-allowed !important; opacity: 0.6; }
         .btn-sell { background: #f38ba8; }
         .btn-travel { background: #89b4fa; width: 100%; margin-top: 0; }
-        .btn-travel:disabled { background: #313244 !important; color: #a6adc8 !important; }
+        
+        /* KİLİTLİ BUTON STİLİ */
+        .btn:disabled { background: #313244 !important; color: #6c7086 !important; cursor: not-allowed !important; opacity: 0.5; border: 1px solid #45475a; }
 
         #log { background: #11111b; border: 1px solid #45475a; padding: 10px; height: 80px; overflow-y: auto; border-radius: 6px; margin-top: 15px; font-size: 0.85em; color: #a6e3a1; font-family: monospace; }
+        .warning { color: #f38ba8; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>Ticaret İmparatorluğu</h1>
-    <div class="subtitle">Unvan: <span id="unvan" style="color:#f9e2af;">Sipariş Tüccarı</span></div>
+    <div class="subtitle">Mod: <span style="color:#f9e2af;">Klasik Menü</span></div>
 
     <div class="stats">
         <span>Geçen Gün: <span id="gun">1</span></span>
-        <span>Mevcut Konum: <span id="sehir">İstanbul</span></span>
+        <span>Mevcut Şehir: <span id="sehir">İstanbul</span></span>
         <span>Nakit: <span id="para">1000</span> TL</span>
-        <span>Banka Borcu: <span id="borc" style="color:#f38ba8;">0</span> TL</span>
-        <span>Depo Kapasitesi: <span id="depo-kullanilan">0</span>/<span id="depo-limit">10</span></span>
-        <span>Durum: <span id="depo-durum" style="color:#a6e3a1;">Uygun</span></span>
+        <span>Depo Durumu: <span id="depo-kullanilan">0</span> / <span id="depo-limit">10</span></span>
     </div>
 
-    <div class="section-title">Şehir Değiştir (Seyahat Et)</div>
+    <div class="section-title">Şehir Değiştir</div>
     <div class="grid" id="sehir-list"></div>
 
-    <div class="section-title">Mevcut Şehir Piyasası (<span id="aktif-pazar-adi">İstanbul</span>)</div>
+    <div class="section-title">Piyasa (<span id="aktif-pazar-adi">İstanbul</span>)</div>
     <div class="grid" id="piyasa-list"></div>
 
-    <div class="section-title">Envanter</div>
+    <div class="section-title">Envanteriniz</div>
     <div class="grid" id="envanter-list"></div>
 
-    <div id="log">> Oyuna hoş geldiniz! Şehir butonlarına basarak seyahat edebilirsiniz.</div>
+    <div id="log">> Oyuna hoş geldiniz!</div>
 </div>
 
 <script>
-    // OYUN DURUMU
     let para = 1000;
-    let borc = 0;
     let gun = 1;
     let mevcutSehir = "İstanbul";
-    let envanter = { Kumaş: 0, Baharat: 0, Demir: 0, İpek: 0 };
-    let fiyatlar = {};
     const MAX_DEPO = 10;
 
+    let envanter = { Kumaş: 0, Baharat: 0, Demir: 0, İpek: 0 };
+    let fiyatlar = {};
     const sehirler = ["İstanbul", "İzmir", "Bursa", "Antalya"];
 
     function randomInt(min, max) { 
         return Math.floor(Math.random() * (max - min + 1)) + min; 
+    }
+
+    function mevcutMiktar() {
+        return Object.values(envanter).reduce((a, b) => a + b, 0);
     }
 
     function sehirDegistir(yeniSehir) {
@@ -69,7 +72,7 @@
         mevcutSehir = yeniSehir;
         gun++;
         fiyatlariGuncelle();
-        logYaz(`📍 ${mevcutSehir} şehrine seyahat edildi. (Gün ${gun})`);
+        logYaz(`📍 ${mevcutSehir} şehrine gidildi.`);
         guncelle();
     }
 
@@ -84,76 +87,66 @@
         });
     }
 
-    function mevcutMiktar() {
-        return Object.values(envanter).reduce((a, b) => a + b, 0);
-    }
+    // KESİN VE SERT ALIM KONTROLÜ
+    function al(urun) {
+        const toplamUrun = mevcutMiktar();
 
-    function al(u) {
-        let toplam = mevcutMiktar();
-        let f = fiyatlar[mevcutSehir][u];
-
-        // SIKI DEPO KONTROLÜ
-        if (toplam >= MAX_DEPO) {
-            logYaz("⚠️ HATA: Depo sınırı aşılamaz! Önce ürün satmalısınız.");
+        // 1. DUVAR: Depo tam sınırda veya üstündeyse işlemi HEMEN DURDUR
+        if (toplamUrun >= MAX_DEPO) {
+            logYaz("<span class='warning'>⚠️ ENGEL: Depo 10/10 dolu! Daha fazla ürün alamazsın.</span>");
             guncelle();
             return;
         }
 
-        if (para < f) {
-            logYaz("⚠️ Yetersiz Bakiye!");
+        const fiyat = fiyatlar[mevcutSehir][urun];
+
+        // 2. DUVAR: Para yetersizse DURDUR
+        if (para < fiyat) {
+            logYaz("<span class='warning'>⚠️ ENGEL: Paran yetersiz!</span>");
             return;
         }
 
-        para -= f;
-        envanter[u]++;
-        logYaz(`${u} alındı. (-${f} TL)`);
+        // Koşullar sağlandıysa ekle
+        para -= fiyat;
+        envanter[urun]++;
+        logYaz(`${urun} alındı. (-${fiyat} TL)`);
         guncelle();
     }
 
-    function sat(u) {
-        if (envanter[u] > 0) {
-            let f = fiyatlar[mevcutSehir][u];
-            para += f;
-            envanter[u]--;
-            logYaz(`${u} satıldı. (+${f} TL)`);
+    function sat(urun) {
+        if (envanter[urun] > 0) {
+            const fiyat = fiyatlar[mevcutSehir][urun];
+            para += fiyat;
+            envanter[urun]--;
+            logYaz(`${urun} satıldı. (+${fiyat} TL)`);
             guncelle();
         }
     }
 
-    function logYaz(m) {
-        const l = document.getElementById("log");
-        l.innerHTML = `> ${m}<br>` + l.innerHTML;
+    function logYaz(mesaj) {
+        const logBox = document.getElementById("log");
+        logBox.innerHTML = `> ${mesaj}<br>` + logBox.innerHTML;
     }
 
     function guncelle() {
-        let toplamUrun = mevcutMiktar();
+        const toplamUrun = mevcutMiktar();
 
         document.getElementById("gun").innerText = gun;
         document.getElementById("sehir").innerText = mevcutSehir;
         document.getElementById("aktif-pazar-adi").innerText = mevcutSehir;
         document.getElementById("para").innerText = para;
-        document.getElementById("borc").innerText = borc;
         document.getElementById("depo-kullanilan").innerText = toplamUrun;
         document.getElementById("depo-limit").innerText = MAX_DEPO;
-
-        const depoDurum = document.getElementById("depo-durum");
-        if (toplamUrun >= MAX_DEPO) {
-            depoDurum.innerText = "DOLU";
-            depoDurum.style.color = "#f38ba8";
-        } else {
-            depoDurum.innerText = "Uygun";
-            depoDurum.style.color = "#a6e3a1";
-        }
 
         // Şehir Butonları
         const sehirDiv = document.getElementById("sehir-list");
         sehirDiv.innerHTML = "";
         sehirler.forEach(s => {
-            let aktif = s === mevcutSehir;
+            const aktif = s === mevcutSehir;
             sehirDiv.innerHTML += `
                 <div class="item">
                     <button class="btn btn-travel" onclick="sehirDegistir('${s}')" ${aktif ? 'disabled' : ''}>
-                        ${aktif ? '📍 ' + s + ' (Mevcut)' : s + "'e Git"}
+                        ${aktif ? '📍 ' + s : s + "'e Git"}
                     </button>
                 </div>`;
         });
@@ -162,24 +155,30 @@
         const envDiv = document.getElementById("envanter-list");
         envDiv.innerHTML = "";
         for (let u in envanter) {
-            envDiv.innerHTML += `<div class="item"><b>${u}</b><br>${envanter[u]} adet</div>`;
+            envDiv.innerHTML += `<div class="item"><b>${u}</b><br>${envanter[u]} Adet</div>`;
         }
 
-        // Piyasa & Satın Alma Butonları (Depo dolunca Al butonları kilitlenir)
+        // Piyasa & Buton Kilitleri
         const piyDiv = document.getElementById("piyasa-list");
         piyDiv.innerHTML = "";
+        
+        const depoDolu = toplamUrun >= MAX_DEPO;
+
         for (let u in fiyatlar[mevcutSehir]) {
-            let f = fiyatlar[mevcutSehir][u];
-            let depoDolu = toplamUrun >= MAX_DEPO;
-            let paraYetersiz = para < f;
+            const fiyat = fiyatlar[mevcutSehir][u];
+            const paraYetersiz = para < fiyat;
             
+            // Eğer depo doluysa veya para yetmiyorsa Al butonu kilitlenir
+            const alKilitli = depoDolu || paraYetersiz;
+            const satKilitli = envanter[u] <= 0;
+
             piyDiv.innerHTML += `
                 <div class="item">
-                    <b>${u}</b>: ${f} TL<br>
-                    <button class="btn" onclick="al('${u}')" ${depoDolu || paraYetersiz ? 'disabled' : ''}>
+                    <b>${u}</b>: ${fiyat} TL<br>
+                    <button class="btn" onclick="al('${u}')" ${alKilitli ? 'disabled' : ''}>
                         ${depoDolu ? 'Depo Dolu' : 'Al'}
                     </button>
-                    <button class="btn btn-sell" onclick="sat('${u}')" ${envanter[u] <= 0 ? 'disabled' : ''}>
+                    <button class="btn btn-sell" onclick="sat('${u}')" ${satKilitli ? 'disabled' : ''}>
                         Sat
                     </button>
                 </div>`;
