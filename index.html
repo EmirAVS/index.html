@@ -96,7 +96,17 @@
             font-size: 0.9em;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 10px;
+        }
+
+        .timer-badge {
+            background: rgba(137, 180, 250, 0.2);
+            color: #89b4fa;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.85em;
         }
 
         .stats { 
@@ -160,6 +170,10 @@
             text-align: center; 
             border: 1px solid rgba(255, 255, 255, 0.05); 
             transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .item:hover {
@@ -287,7 +301,7 @@
             border-radius: 10px; padding: 12px; margin-bottom: 12px;
         }
 
-        .guide-title { color: #89b4fa; font-weight: bold; font-size: 1em; margin-bottom: 6px; }
+        .guide-title { font-weight: bold; font-size: 1em; margin-bottom: 6px; }
         .guide-text { color: #a6adc8; font-size: 0.88em; line-height: 1.5; }
         .guide-text b { color: #f9e2af; }
     </style>
@@ -302,12 +316,15 @@
             <button class="btn-info" style="color:#f38ba8; border-color:rgba(243,139,168,0.3);" onclick="oyunuSifirla()">🔄 Sıfırla</button>
         </div>
     </div>
-    <div class="subtitle">Mod: <span style="color:#f9e2af;">Borsa, Meyhane, Gayrimenkul & RPG Simülatörü</span></div>
+    <div class="subtitle">Mod: <span style="color:#f9e2af;">Canlı Piyasa, Borsa, Meyhane & Gayrimenkul Simülatörü</span></div>
 
-    <!-- Haber Bandı -->
+    <!-- Haber Bandı & Zaman Sayacı -->
     <div class="news-bar">
-        <span>📰 <b>Piyasa Haberi:</b></span>
-        <span id="haber-metni">Piyasalarda durum sakin. Ticaret yolları güvenli görünüyor.</span>
+        <div>
+            <span>📰 <b>Piyasa Haberi:</b></span>
+            <span id="haber-metni">Piyasalarda durum sakin. Fiyatlar canlı güncelleniyor.</span>
+        </div>
+        <div class="timer-badge">⌛ <span id="kalan-sure">60</span>s</div>
     </div>
 
     <!-- İstatistik Kartları -->
@@ -348,30 +365,40 @@
 
     <div class="section-title">Yönetim, Borsa & Eğlence</div>
     <div class="grid">
-        <div id="kervan-panel"></div>
+        <div id="kervan-panel" class="item"></div>
         <div class="item">
-            <b>🏛️ Merkez Bankası</b><br>
-            <small style="color:#a6adc8;">Kredi Çek / Borç Öde</small><br>
+            <div>
+                <b>🏛️ Merkez Bankası</b><br>
+                <small style="color:#a6adc8;">Kredi Çek / Borç Öde</small>
+            </div>
             <button class="btn btn-bank" onclick="modalAc('bankaModal')">Banka İşlemleri</button>
         </div>
         <div class="item">
-            <b>🪙 Altın Borsası</b><br>
-            <small style="color:#a6adc8;">Ons: <span id="altin-fiyati" style="color:#f9e2af;">500</span> TL</small><br>
+            <div>
+                <b>🪙 Altın Borsası</b><br>
+                <small style="color:#a6adc8;">Ons: <span id="altin-fiyati" style="color:#f9e2af;">500</span> TL</small>
+            </div>
             <button class="btn btn-upgrade" onclick="modalAc('altinModal')">Altın Al / Sat</button>
         </div>
         <div class="item">
-            <b>🎲 Şehir Meyhanesi</b><br>
-            <small style="color:#a6adc8;">Zar At & Şansını Dene</small><br>
+            <div>
+                <b>🎲 Şehir Meyhanesi</b><br>
+                <small style="color:#a6adc8;">Zar At & Şansını Dene</small>
+            </div>
             <button class="btn btn-casino" onclick="modalAc('meyhaneModal')">Meyhaneye Gir</button>
         </div>
         <div class="item">
-            <b>🏘️ Dükkan / Mülk Al</b><br>
-            <small style="color:#a6adc8;">Pasif Kira Geliri</small><br>
+            <div>
+                <b>🏘️ Dükkan / Mülk Al</b><br>
+                <small style="color:#a6adc8;">Pasif Kira Geliri</small>
+            </div>
             <button class="btn btn-upgrade" onclick="mulkSatinAl()">Dükkan Al (<span id="mulk-fiyati">2000</span> TL)</button>
         </div>
         <div class="item">
-            <b>🛡️ Muhafız Kirala</b><br>
-            <small style="color:#a6adc8;">Haydut Koruması</small><br>
+            <div>
+                <b>🛡️ Muhafız Kirala</b><br>
+                <small style="color:#a6adc8;">Haydut Koruması</small>
+            </div>
             <button class="btn btn-upgrade" onclick="muhafizKirala()">Muhafız Al (300 TL)</button>
         </div>
     </div>
@@ -385,7 +412,7 @@
     <div class="section-title">Envanteriniz</div>
     <div class="grid" id="envanter-list"></div>
 
-    <div id="log">> Ticaret hayatınıza hoş geldiniz! Oyun otomatik olarak kaydedilmektedir.</div>
+    <div id="log">> Ticaret hayatınıza hoş geldiniz! Fiyatlar her 60 saniyede bir otomatik yenilenmektedir.</div>
 </div>
 
 <!-- BANKA MODALI -->
@@ -413,7 +440,7 @@
             <div class="modal-title">🪙 Altın Borsası</div>
             <button class="btn-close" onclick="modalKapat('altinModal')">&times;</button>
         </div>
-        <p style="font-size: 0.9em; color: #a6adc8;">Altın fiyatları her şehir değiştirdiğinizde (gün geçtikçe) dalgalanır.</p>
+        <p style="font-size: 0.9em; color: #a6adc8;">Altın fiyatları zamanla ve şehir değiştirdiğinizde dalgalanır.</p>
         <div class="merchant-card">
             <h4>1 Altın Ons: <span style="color:#f9e2af;" id="modal-altin-fiyati">500</span> TL</h4>
             <p>Elinizdeki Altın: <b><span id="modal-altin-adet">0</span> Adet</b></p>
@@ -462,40 +489,61 @@
     </div>
 </div>
 
-<!-- GELİŞMİŞ REHBER MODALI -->
+<!-- REHBER MODALI -->
 <div class="modal-overlay" id="rehberModal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 650px;">
         <div class="modal-header">
-            <div class="modal-title">📖 Detaylı Oyuncu Kılavuzu</div>
+            <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size: 1.2em;">📖</span> Ticaret İmparatorluğu Oyuncu Kılavuzu
+            </div>
             <button class="btn-close" onclick="modalKapat('rehberModal')">&times;</button>
         </div>
         
-        <div class="guide-box">
-            <div class="guide-title">📈 1. Ticaret Mantığı & Kıtlık Fırsatları</div>
-            <div class="guide-text">Ucuza mal alıp pahalıya sat. Kıtlık çıkan şehirde mal 3 kat pahalıya satılır.</div>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <div class="guide-box" style="border-left: 4px solid #a6e3a1; background: rgba(166, 227, 161, 0.05);">
+                <div class="guide-title" style="color: #a6e3a1;">📈 1. Canlı Piyasa & Kıtlık Fırsatları</div>
+                <div class="guide-text">
+                    Fiyatlar <b>her 1 dakikada bir</b> otomatik olarak yenilenir! Haber bandını takip edin! <b>Kıtlık çıkan şehirlerde</b> o mal <b>3 kat daha pahalıya</b> satılır.
+                </div>
+            </div>
+
+            <div class="guide-box" style="border-left: 4px solid #f9e2af; background: rgba(249, 226, 175, 0.05);">
+                <div class="guide-title" style="color: #f9e2af;">🪙 2. Altın Borsası & Enflasyon</div>
+                <div class="guide-text">
+                    Altın fiyatları zaman içinde dalgalanır. Paranızı altın borsasında değerlendirip <b>düşükken alıp yüksekken satarak</b> servetinize servet katabilirsiniz.
+                </div>
+            </div>
+
+            <div class="guide-box" style="border-left: 4px solid #f38ba8; background: rgba(243, 139, 168, 0.05);">
+                <div class="guide-title" style="color: #f38ba8;">🎲 3. Meyhane (Kumar) & Risk</div>
+                <div class="guide-text">
+                    Şehir meyhanesinde 100 TL karşılığında zar atabilirsiniz. <b>4, 5 veya 6</b> atarsanız paranız 2'ye katlanır. Ancak dikkat edin, kaybetme riski de eşittir!
+                </div>
+            </div>
+
+            <div class="guide-box" style="border-left: 4px solid #89b4fa; background: rgba(137, 180, 250, 0.05);">
+                <div class="guide-title" style="color: #89b4fa;">🏘️ 4. Pasif Gelir & Mülk Yönetimi</div>
+                <div class="guide-text">
+                    Satın aldığınız her dükkan size her gün otomatik olarak <b>250 TL kira geliri</b> getirir. Mülk yatırımı uzun vadede en güvenli gelir kapısıdır.
+                </div>
+            </div>
+
+            <div class="guide-box" style="border-left: 4px solid #cba6f7; background: rgba(203, 166, 247, 0.05);">
+                <div class="guide-title" style="color: #cba6f7;">🏛️ 5. Banka & Faiz Sürprizi</div>
+                <div class="guide-text">
+                    Nakit sıkıntısı çektiğinizde bankadan kredi çekebilirsiniz. Unutmayın, ödenmeyen borçlara <b>her gün %5 faiz</b> işler!
+                </div>
+            </div>
+
+            <div class="guide-box" style="border-left: 4px solid #b4befe; background: rgba(180, 190, 254, 0.05);">
+                <div class="guide-title" style="color: #b4befe;">🛡️ 6. Yolculuk & Haydut Riskleri</div>
+                <div class="guide-text">
+                    Şehirler arası seyahat ederken haydut saldırısına uğrayabilirsiniz. <b>Muhafız kiralamak</b> paranızın çalınmasını önler.
+                </div>
+            </div>
         </div>
 
-        <div class="guide-box">
-            <div class="guide-title">🪙 2. Altın Borsası & Enflasyon</div>
-            <div class="guide-text">Altın fiyatları sürekli değişir. Paranı altına yatırıp yükselince satarak servet katlayabilirsin.</div>
-        </div>
-
-        <div class="guide-box">
-            <div class="guide-title">🎲 3. Şehir Meyhanesi (Kumar)</div>
-            <div class="guide-text">Risk seven tüccarlar için! 100 TL basıp zar atın, 4-5-6 atan parasını ikiye katlar.</div>
-        </div>
-
-        <div class="guide-box">
-            <div class="guide-title">🏘️ 4. Pasif Kira Geliri</div>
-            <div class="guide-text">Aldığınız her Dükkan size her gün otomatik 250 TL kira geliri kazandırır.</div>
-        </div>
-
-        <div class="guide-box">
-            <div class="guide-title">🏛️ 5. Banka & Kredi</div>
-            <div class="guide-text">Sıkışınca kredi çekebilirsiniz ancak her gün borca %5 faiz biner.</div>
-        </div>
-
-        <button class="btn btn-travel" style="margin-top: 10px;" onclick="modalKapat('rehberModal')">Oyuna Dön</button>
+        <button class="btn btn-travel" style="padding: 12px; font-size: 1em;" onclick="modalKapat('rehberModal')">Anladım, Oyuna Dön</button>
     </div>
 </div>
 
@@ -513,6 +561,7 @@
     let muhafizSayisi = 0;
     let kitlikSehri = "";
     let kitlikUrunu = "";
+    let kalanSure = 60;
 
     const kervanlar = [
         { ad: "Eşek Kervanı", kapasite: 10, fiyat: 0, yolMasrafı: 50 },
@@ -533,6 +582,19 @@
 
     function mevcutMiktar() { return Object.values(envanter).reduce((a, b) => a + b, 0); }
     function mevcutKapasite() { return kervanlar[kervanIndex].kapasite; }
+
+    // CANLI ZAMAN SAYACI VE FİYAT YENİLEME
+    setInterval(() => {
+        kalanSure--;
+        document.getElementById("kalan-sure").innerText = kalanSure;
+        if (kalanSure <= 0) {
+            kalanSure = 60;
+            fiyatlariGuncelle();
+            altinFiyati = Math.max(200, Math.min(1000, altinFiyati + randomInt(-50, 50)));
+            logYaz("<span class='success'>🔄 Piyasa fiyatları güncellendi!</span>");
+            guncelle();
+        }
+    }, 1000);
 
     // OYUNU KAYDETME VE YÜKLEME (LocalStorage)
     function oyunuKaydet() {
@@ -642,7 +704,7 @@
             document.getElementById("haber-metni").innerText = `🚨 KITLIK: ${kitlikSehri} şehrinde ${kitlikUrunu} bitti! Fiyatlar 3 katına çıktı!`;
         } else {
             kitlikSehri = ""; kitlikUrunu = "";
-            document.getElementById("haber-metni").innerText = "Piyasalarda durum sakin. Ticaret yolları açık.";
+            document.getElementById("haber-metni").innerText = "Piyasalarda durum sakin. Fiyatlar canlı güncelleniyor.";
         }
     }
 
@@ -655,7 +717,6 @@
         mevcutSehir = yeniSehir;
         gun++;
 
-        // Altın Fiyatı Dalgalanması
         altinFiyati = Math.max(200, Math.min(1000, altinFiyati + randomInt(-80, 80)));
 
         if (borc > 0) {
@@ -750,7 +811,11 @@
 
     function kervanYukselt() {
         const sonrakiKervan = kervanlar[kervanIndex + 1];
-        if (!sonrakiKervan || para < sonrakiKervan.fiyat) return;
+        if (!sonrakiKervan) return;
+        if (para < sonrakiKervan.fiyat) {
+            logYaz(`<span class='warning'>⚠️ Yetersiz bakiye! ${sonrakiKervan.ad} için ${sonrakiKervan.fiyat} TL gerekli.</span>`);
+            return;
+        }
         para -= sonrakiKervan.fiyat;
         kervanIndex++;
         logYaz(`<span class='success'>🎉 Kervan yükseltildi: ${sonrakiKervan.ad}</span>`);
@@ -814,16 +879,16 @@
         const mevcutKervan = kervanlar[kervanIndex];
         const sonrakiKervan = kervanlar[kervanIndex + 1];
         let kervanHtml = `
-            <div class="item">
+            <div>
                 <b>🚚 ${mevcutKervan.ad}</b><br>
-                <small style="color:#a6adc8;">Kapasite: ${mevcutKervan.kapasite}</small><br>
+                <small style="color:#a6adc8;">Kapasite: ${mevcutKervan.kapasite}</small>
+            </div>
         `;
         if (sonrakiKervan) {
-            kervanHtml += `<button class="btn btn-upgrade" onclick="kervanYukselt()" ${para < sonrakiKervan.fiyat ? 'disabled' : ''}>${sonrakiKervan.ad} (${sonrakiKervan.fiyat} TL)</button>`;
+            kervanHtml += `<button class="btn btn-upgrade" onclick="kervanYukselt()" ${para < sonrakiKervan.fiyat ? 'disabled' : ''}>Yükselt: ${sonrakiKervan.ad} (${sonrakiKervan.fiyat} TL)</button>`;
         } else {
             kervanHtml += `<button class="btn btn-upgrade" disabled>Maksimum Seviye</button>`;
         }
-        kervanHtml += `</div>`;
         document.getElementById("kervan-panel").innerHTML = kervanHtml;
 
         // Şehirler Listesi
@@ -833,8 +898,10 @@
             const aktifMi = s === mevcutSehir;
             sehirHtml += `
                 <div class="item">
-                    <b>${s}</b><br>
-                    <small style="color:#a6adc8;">Mesafe Masrafı: ${masraf} TL</small><br>
+                    <div>
+                        <b>${s}</b><br>
+                        <small style="color:#a6adc8;">Mesafe Masrafı: ${masraf} TL</small>
+                    </div>
                     <button class="btn btn-travel" onclick="sehirDegistir('${s}')" ${aktifMi || para < masraf ? 'disabled' : ''}>
                         ${aktifMi ? 'Buradasınız' : 'Yolculuk Et'}
                     </button>
@@ -850,10 +917,14 @@
             const depoDolu = mevcutMiktar() >= mevcutKapasite();
             piyasaHtml += `
                 <div class="item">
-                    <b>${urun}</b><br>
-                    <span style="color:#f9e2af; font-weight:bold;">${fiyat} TL</span><br>
-                    <button class="btn" onclick="al('${urun}')" ${depoDolu || para < fiyat ? 'disabled' : ''}>Al</button>
-                    <button class="btn btn-sell" onclick="sat('${urun}')" ${envanter[urun] <= 0 ? 'disabled' : ''}>Sat</button>
+                    <div>
+                        <b>${urun}</b><br>
+                        <span style="color:#f9e2af; font-weight:bold;">${fiyat} TL</span>
+                    </div>
+                    <div style="display:flex; gap:5px; width:100%;">
+                        <button class="btn" onclick="al('${urun}')" ${depoDolu || para < fiyat ? 'disabled' : ''}>Al</button>
+                        <button class="btn btn-sell" onclick="sat('${urun}')" ${envanter[urun] <= 0 ? 'disabled' : ''}>Sat</button>
+                    </div>
                 </div>
             `;
         }
