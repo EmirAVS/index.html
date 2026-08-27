@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticaret İmparatorluğu - Offline Edition</title>
     
+    <!-- PWA & Mobil Uyumluluk Meta Etiketleri -->
     <meta name="theme-color" content="#1e1e2e">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
@@ -531,20 +533,28 @@
 </div>
 
 <script>
-    // OFFLINE SERVICE WORKER (İnternetsiz Çalıştırma Motoru)
+    // OFFLINE SERVICE WORKER (İnternetsiz Çalıştırma Motoru - Inline Blob)
     if ('serviceWorker' in navigator) {
-        const swCode = `
-            const CACHE_NAME = 'ticaret-v1';
-            self.addEventListener('install', e => {
-                e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])));
-            });
-            self.addEventListener('fetch', e => {
-                e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
-            });
-        `;
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Kayıt Hatası:', err));
+        window.addEventListener('load', () => {
+            const swCode = `
+                const CACHE_NAME = 'ticaret-offline-v1';
+                self.addEventListener('install', e => {
+                    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])));
+                    self.skipWaiting();
+                });
+                self.addEventListener('activate', e => {
+                    e.waitUntil(clients.claim());
+                });
+                self.addEventListener('fetch', e => {
+                    e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl)
+                .then(reg => console.log('Service Worker Kayıtlı:', reg.scope))
+                .catch(err => console.log('Service Worker Hatası:', err));
+        });
     }
 
     let para = 1000;
