@@ -3,21 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticaret İmparatorluğu - Ultimate Edition</title>
-
-    <link rel="manifest" href="manifest.json">
+    <title>Ticaret İmparatorluğu - Offline Edition</title>
+    
     <meta name="theme-color" content="#1e1e2e">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('SW Kayıtlı:', reg.scope))
-                    .catch(err => console.log('SW Hatası:', err));
-            });
-        }
-    </script>
 
     <style>
         * { box-sizing: border-box; }
@@ -316,13 +306,13 @@
             <button class="btn-info" style="color:#f38ba8; border-color:rgba(243,139,168,0.3);" onclick="oyunuSifirla()">🔄 Sıfırla</button>
         </div>
     </div>
-    <div class="subtitle">Mod: <span style="color:#f9e2af;">Canlı Piyasa, Borsa, Meyhane & Gayrimenkul Simülatörü</span></div>
+    <div class="subtitle">Mod: <span style="color:#f9e2af;">Çevrimdışı (Offline) Dinamik Pazar Simülatörü</span></div>
 
     <!-- Haber Bandı & Zaman Sayacı -->
     <div class="news-bar">
         <div>
             <span>📰 <b>Piyasa Haberi:</b></span>
-            <span id="haber-metni">Piyasalarda durum sakin. Fiyatlar canlı güncelleniyor.</span>
+            <span id="haber-metni">Piyasalarda durum sakin. Fiyatlar her dakikada bir otomatik yenilenir.</span>
         </div>
         <div class="timer-badge">⌛ <span id="kalan-sure">60</span>s</div>
     </div>
@@ -412,7 +402,7 @@
     <div class="section-title">Envanteriniz</div>
     <div class="grid" id="envanter-list"></div>
 
-    <div id="log">> Ticaret hayatınıza hoş geldiniz! Fiyatlar her 60 saniyede bir otomatik yenilenmektedir.</div>
+    <div id="log">> Ticaret hayatınıza hoş geldiniz! Tamamen çevrimdışı oynanabilir.</div>
 </div>
 
 <!-- BANKA MODALI -->
@@ -440,7 +430,7 @@
             <div class="modal-title">🪙 Altın Borsası</div>
             <button class="btn-close" onclick="modalKapat('altinModal')">&times;</button>
         </div>
-        <p style="font-size: 0.9em; color: #a6adc8;">Altın fiyatları zamanla ve şehir değiştirdiğinizde dalgalanır.</p>
+        <p style="font-size: 0.9em; color: #a6adc8;">Altın fiyatları 60 saniyede bir dalgalanır.</p>
         <div class="merchant-card">
             <h4>1 Altın Ons: <span style="color:#f9e2af;" id="modal-altin-fiyati">500</span> TL</h4>
             <p>Elinizdeki Altın: <b><span id="modal-altin-adet">0</span> Adet</b></p>
@@ -501,44 +491,37 @@
         
         <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
             <div class="guide-box" style="border-left: 4px solid #a6e3a1; background: rgba(166, 227, 161, 0.05);">
-                <div class="guide-title" style="color: #a6e3a1;">📈 1. Canlı Piyasa & Kıtlık Fırsatları</div>
+                <div class="guide-title" style="color: #a6e3a1;">📈 1. Canlı Piyasa (60 Saniye)</div>
                 <div class="guide-text">
-                    Fiyatlar <b>her 1 dakikada bir</b> otomatik olarak yenilenir! Haber bandını takip edin! <b>Kıtlık çıkan şehirlerde</b> o mal <b>3 kat daha pahalıya</b> satılır.
+                    Fiyatlar <b>her 1 dakikada bir</b> şehir değiştirmeseniz bile otomatik güncellenir.
                 </div>
             </div>
 
             <div class="guide-box" style="border-left: 4px solid #f9e2af; background: rgba(249, 226, 175, 0.05);">
                 <div class="guide-title" style="color: #f9e2af;">🪙 2. Altın Borsası & Enflasyon</div>
                 <div class="guide-text">
-                    Altın fiyatları zaman içinde dalgalanır. Paranızı altın borsasında değerlendirip <b>düşükken alıp yüksekken satarak</b> servetinize servet katabilirsiniz.
+                    Altın fiyatları zaman içinde dalgalanır. Düşükken alıp yüksekken satarak kazanç sağlayın.
                 </div>
             </div>
 
             <div class="guide-box" style="border-left: 4px solid #f38ba8; background: rgba(243, 139, 168, 0.05);">
                 <div class="guide-title" style="color: #f38ba8;">🎲 3. Meyhane (Kumar) & Risk</div>
                 <div class="guide-text">
-                    Şehir meyhanesinde 100 TL karşılığında zar atabilirsiniz. <b>4, 5 veya 6</b> atarsanız paranız 2'ye katlanır. Ancak dikkat edin, kaybetme riski de eşittir!
+                    <b>4, 5 veya 6</b> atarsanız yatırdığınız parayı katlarsınız.
                 </div>
             </div>
 
             <div class="guide-box" style="border-left: 4px solid #89b4fa; background: rgba(137, 180, 250, 0.05);">
                 <div class="guide-title" style="color: #89b4fa;">🏘️ 4. Pasif Gelir & Mülk Yönetimi</div>
                 <div class="guide-text">
-                    Satın aldığınız her dükkan size her gün otomatik olarak <b>250 TL kira geliri</b> getirir. Mülk yatırımı uzun vadede en güvenli gelir kapısıdır.
-                </div>
-            </div>
-
-            <div class="guide-box" style="border-left: 4px solid #cba6f7; background: rgba(203, 166, 247, 0.05);">
-                <div class="guide-title" style="color: #cba6f7;">🏛️ 5. Banka & Faiz Sürprizi</div>
-                <div class="guide-text">
-                    Nakit sıkıntısı çektiğinizde bankadan kredi çekebilirsiniz. Unutmayın, ödenmeyen borçlara <b>her gün %5 faiz</b> işler!
+                    Satın aldığınız dükkanlar her şehir geçişinde size pasif kira getirir.
                 </div>
             </div>
 
             <div class="guide-box" style="border-left: 4px solid #b4befe; background: rgba(180, 190, 254, 0.05);">
-                <div class="guide-title" style="color: #b4befe;">🛡️ 6. Yolculuk & Haydut Riskleri</div>
+                <div class="guide-title" style="color: #b4befe;">🌐 5. Tamamen Çevrimdışı (Offline)</div>
                 <div class="guide-text">
-                    Şehirler arası seyahat ederken haydut saldırısına uğrayabilirsiniz. <b>Muhafız kiralamak</b> paranızın çalınmasını önler.
+                    İnternetiniz olmasa dahi oyunu tarayıcınızdan sorunsuz oynamaya devam edebilirsiniz.
                 </div>
             </div>
         </div>
@@ -548,6 +531,22 @@
 </div>
 
 <script>
+    // OFFLINE SERVICE WORKER (İnternetsiz Çalıştırma Motoru)
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            const CACHE_NAME = 'ticaret-v1';
+            self.addEventListener('install', e => {
+                e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])));
+            });
+            self.addEventListener('fetch', e => {
+                e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+            });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Kayıt Hatası:', err));
+    }
+
     let para = 1000;
     let borc = 0;
     let gun = 1;
@@ -583,7 +582,7 @@
     function mevcutMiktar() { return Object.values(envanter).reduce((a, b) => a + b, 0); }
     function mevcutKapasite() { return kervanlar[kervanIndex].kapasite; }
 
-    // CANLI ZAMAN SAYACI VE FİYAT YENİLEME
+    // DİNAMİK 60 SANİYE ZAMANLAYICISI
     setInterval(() => {
         kalanSure--;
         document.getElementById("kalan-sure").innerText = kalanSure;
@@ -591,12 +590,11 @@
             kalanSure = 60;
             fiyatlariGuncelle();
             altinFiyati = Math.max(200, Math.min(1000, altinFiyati + randomInt(-50, 50)));
-            logYaz("<span class='success'>🔄 Piyasa fiyatları güncellendi!</span>");
+            logYaz("<span class='success'>🔄 Piyasa ve altın fiyatları yenilendi!</span>");
             guncelle();
         }
     }, 1000);
 
-    // OYUNU KAYDETME VE YÜKLEME (LocalStorage)
     function oyunuKaydet() {
         const kayitVerisi = { para, borc, gun, xp, seviye, mulksayisi, mulkfiyati, altinAdet, altinFiyati, mevcutSehir, muhafizSayisi, kervanIndex, envanter };
         localStorage.setItem("ticaret_oyun_save", JSON.stringify(kayitVerisi));
@@ -856,7 +854,7 @@
     }
 
     function guncelle() {
-        oyunuKaydet(); // Her işlemde otomatik kaydet
+        oyunuKaydet();
 
         document.getElementById("gun").innerText = gun;
         document.getElementById("xp").innerText = xp;
@@ -943,7 +941,7 @@
         document.getElementById("envanter-list").innerHTML = envanterHtml;
     }
 
-    // Oyunu Başlat
+    // Başlat
     oyunuYukle();
     fiyatlariGuncelle();
     guncelle();
